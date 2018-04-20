@@ -133,7 +133,7 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
             ### Discretize Energies for classification option
             # Define energy bins
             #bins = np.arange(0,2018,0.01)
-            bins = np.arange(-5,2025,ENERGY_BIN_WIDTH_FEATURE)
+            bins = np.arange(-5,2025,ENERGY_BIN_WIDTH_TARGET)
             # Apply this grid on enegry and center energy to the bin center to increase precision
             binned = np.digitize(E, bins, right=True)
             E_binned = bins[binned]#-0.005
@@ -363,7 +363,7 @@ def test_envir(library, n, model, verbosity, scaling, pca, k):
         X_hat_test, X_rec_test = PCA(Xtest, k)
         Xtrain, Xdev, Xtest = gen_pol_feat(X_hat_train, X_hat_dev, X_hat_test)
     # Start testing
-    score = NN_train(Xtrain, Ytrain_int[:], Xdev, Ydev_int[:], model, verbosity)
+    score = NN_train(Xtrain, Ytrain_int, Xdev, Ydev_int, model, verbosity)
     scores = np.append(scores, score)
     
     #Save model via
@@ -375,11 +375,11 @@ def test_envir(library, n, model, verbosity, scaling, pca, k):
     predict_proba_train = model.predict_proba(Xtrain)
     predict_dev = model.predict(Xdev)/100
     predict_proba_dev = model.predict_proba(Xdev)
-    plt.plot(Ytrain[:]/100-predict_train, label=("Train: Loss energy on energy "+str(1)))
-    plt.plot(Ydev[:]/100-predict_dev[:], label=("Dev: Loss energy on energy "+str(1)))
-    abserr_train = np.absolute(Ytrain[:]/100-predict_train[:])
+    plt.plot(Ytrain/100-predict_train, label=("Train: Loss energy on energy "+str(1)))
+    plt.plot(Ydev/100-predict_dev, label=("Dev: Loss energy on energy "+str(1)))
+    abserr_train = np.absolute(Ytrain/100-predict_train)
     abserr_train = np.sum(abserr_train)
-    abserr_dev = np.absolute(Ydev[:]/100-predict_dev[:])
+    abserr_dev = np.absolute(Ydev/100-predict_dev)
     abserr_dev = np.sum(abserr_dev)
     print("Mean error per prediction in training set: %3.2f on energy label" % (abserr_train/len(Xtrain)))
     print("Mean error per prediction in dev set: %3.2f on energy label" % (abserr_dev/len(Xdev)))

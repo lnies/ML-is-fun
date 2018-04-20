@@ -26,15 +26,15 @@ MAX_ENERGY_FEATURE = 2018.00 # in (eV) maximal value for the feature grid
 GRID_FEATURES = np.arange(MIN_ENERGY_FEATURE, MAX_ENERGY_FEATURE, ENERGY_BIN_WIDTH_FEATURE)
 # Grid for creating the target label
 ENERGY_BIN_WIDTH_TARGET = 0.01 # in (eV) is grid size of discretizing the target grid
-MIN_ENERGY_LABEL = 2013.00 # in (eV) is minimal energy value for target grid
-MAX_ENERGY_LABEL = 2016.00 # in (eV) is maximal energy value for target grid 
+MIN_ENERGY_LABEL = 2012.80 # in (eV) is minimal energy value for target grid
+MAX_ENERGY_LABEL = 2015.20 # in (eV) is maximal energy value for target grid 
 GRID_TARGET = np.arange(MIN_ENERGY_LABEL, MAX_ENERGY_LABEL, ENERGY_BIN_WIDTH_TARGET)
 ## Parameters for splitting the library
 TRAIN_SPLIT = 0.8 # splitting ratio of the library in favor of training set NOT IMPLEMENTED YET
 DEV_SPLIT = 0.1 # splitting ratio of the library in favor of dev set NOT IMPLEMENTED YET
 TEST_SPLIT = 0.1 # splitting ratio of the library in favor of test set NOT IMPLEMENTED YET
 ## Parameters for applying the Poisson noise
-POISSONCNTS = 1 #0.5*1e3 
+POISSONCNTS = 0.5*1e3 
 ## Other global variables
 legend = ['states', 'energies', 'energies_binned', 'splittings', 'ratios', 'features', 'energy_label', 'plot']
 

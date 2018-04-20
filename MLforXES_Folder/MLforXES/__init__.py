@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import numpy as np
 import pandas as pd
+import lmfit
 import matplotlib
 import math
 import random
