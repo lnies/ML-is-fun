@@ -5,5 +5,5 @@ setup(
     version='0.1',
     packages=['MLforXES'],
     author='Lukas',
-    requires=['astropy', 'plotly', 'sklearn', 'tarfile', 'dill', 'msgpack', 'h5py', 'lmfit']
+    requires=['astropy', 'plotly', 'sklearn', 'tarfile', 'dill', 'msgpack', 'h5py', 'lmfit', 'peakutils']
 )

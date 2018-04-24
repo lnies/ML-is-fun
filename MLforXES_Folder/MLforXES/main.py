@@ -17,7 +17,6 @@ def build_library(N, n, noise, random_states, Set, verbosity, poisson = POISSONC
     Function wrapped around gen_set() for building the training library. 
         - If N is large, generates multiple msgpack files and then zips them.
     """
-    print("Poissoncnts (build): %f" %(poisson))
     start = time.time()
     label_counter = 1
     if ( N > 1e5 ):
@@ -71,7 +70,6 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
         Splitting is set to 0.85eV +- 0.05
         Ratios are set to 1.7 pm 0.5
     """
-    print("Poissoncnts (gen): %f" %(poissoncnts))
     assert n <= MAXNUMSTATES, "n is greater than MAXNUMSTATES. Check config"
     if (verbosity > 0):
         start = time.time()
@@ -294,13 +292,19 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
         old_stdout = sys.stdout
         sys.stdout = mystdout = io.StringIO()
     # Perform training 
+    print("")
     for i in range(model.max_iter):
+        """
+        if ((i % model.max_iter/100) == 0):
+            print("Training progress: %i/100%%" % (int(i/model.max_iter * 100)))  
+        """ 
         model.partial_fit(Xtrain, Ytrain, classes=np.unique(grid_target_int))
         # Calculate errors
         predict_train = model.predict(Xtrain)/100
         predict_dev = model.predict(Xdev)/100
         train_error = np.append(train_error, np.sum(np.absolute(Ytrain/100-predict_train)))
         dev_error = np.append(dev_error, 8*np.sum(np.absolute(Ydev/100-predict_dev)))# factor 8 because dev set is 8 times smaller than the train set
+    print("")
     # Delete pipe
     if (verbosity > 0):
         sys.stdout = old_stdout
@@ -502,6 +506,57 @@ def gen_pol_feat(Xtrain_small, Xdev_small, Xtest_small):
     Xtest = Xtest_outer[:, j, k]
     return Xtrain, Xdev, Xtest
 
+def gaussfit(data, ecenter = 2013.5, width = 0.1):
+    '''use guessfit.best_values and gauessfit.chisqr, etc. to get
+    parameters from the fit'''
+    indices = np.where((GRID_TARGET>ecenter-0.1)&(GRID_TARGET<ecenter+0.1))[0]
+    yvalues = data[indices]
+    xrange = GRID_TARGET[indices]
+    gaussmod = lmfit.models.GaussianModel()
+    gausspars = gaussmod.guess(yvalues, x=xrange)
+    gaussfit = gaussmod.fit(yvalues, params=gausspars, x=xrange)
+    return gaussfit
+
+def prob_stats(prob_data):
+    """
+    Fit Gaussian distributions to probability distribution of target grid
+    by searching peaks with peakutils. Returns multidimensional array of fits. 
+    """
+    # Fit Gaussians to all found peaks
+    N = len(prob_data)
+    fit = []
+    for i in range(N):
+        data = prob_data[i]
+        index = peakutils.indexes(data, thres=0.5, min_dist=10)
+        subarray = np.array([])
+        for j in range(len(index)):
+            mu = GRID_TARGET[index[j]]
+            subarray = np.append(subarray, gaussfit(data, ecenter = mu, width = 0.1))
+        fit.append(subarray)
+    # Plot number of fits
+    peaks = np.zeros(10)
+    header = np.zeros(10)
+    for i in range(10):
+        header[i] = i
+    for i in range(len(fit)):
+        for j in range(10):
+            if len(fit[i]) == j:
+                peaks[j] += 1
+    print("Peaks fitted per spectrum: ")
+    print(header)
+    print(peaks)
+    # Plot information about the mean width of all fits
+    omegas = np.array([])
+    for i in range(len(fit)):
+        for j in range(len(fit[i])):
+            omegas = np.append(omegas, fit[i][j].best_values['sigma'])
+    print("Mean standart deviation: %3.3f eV" % np.mean(omegas))        
+    plt.plot(omegas)
+    plt.title("Standart deviation per fit")
+    plt.xlabel("Fit number")
+    plt.ylabel("Standart deviation in eV")
+    plotly_show()
+    return fit
 
 
 
