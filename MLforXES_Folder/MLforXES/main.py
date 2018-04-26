@@ -316,7 +316,7 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
         verbosity_output = np.array(verbosity_output.split(' '))
         for i in range(4,len(verbosity_output),4):
             if (verbosity_output[i].split('\n')[0] == 'improve'):
-                break
+                continue
             else:
                 loss = np.append(loss, float(verbosity_output[i].split('\n')[0]))
     # Save score of training
