@@ -287,38 +287,51 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
     # Create error array to store mean squared error
     train_error = np.array([])
     dev_error = np.array([])
-    # Set out pipe to catch stdout for getting verbosity output of model.fit
-    if (verbosity > 0):
-        old_stdout = sys.stdout
-        sys.stdout = mystdout = io.StringIO()
-    # Perform training 
-    print("")
-    for i in range(model.max_iter):
+    ### Perform training 
+    def maybe_float(s):
         """
-        if ((i % model.max_iter/100) == 0):
-            print("Training progress: %i/100%%" % (int(i/model.max_iter * 100)))  
-        """ 
+        Test if sting element is float or not
+        """
+        try:
+            return float(s)
+        except (ValueError, TypeError):
+            return s
+    print("")
+    loss = np.array(0)
+    loss = np.delete(loss, 0)
+    # perform training iteration
+    inner_clock = time.time()
+    iteration_time = np.array([])
+    for i in range(model.max_iter):
+        # Runtime control
+        if ((i % (model.max_iter/100)) == 0):
+            iteration_time = np.append(iteration_time, time.time()-inner_clock)
+            mean_it_time = np.mean(iteration_time)
+            remaining_time = (100-(int(i/model.max_iter * 100)))*(mean_it_time)
+            print("Training progress: %i%%; Time fraction: %3.2f s per %%; Estimated time left: %i s (%3.2f h)" % (int(i/model.max_iter * 100), (mean_it_time), int(remaining_time), (remaining_time/3600)), end='\r') 
+            inner_clock = time.time()
+        # Set out pipe to catch stdout for getting verbosity output of model.fit
+        if (verbosity > 0):
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+        # Perform trainings step
         model.partial_fit(Xtrain, Ytrain, classes=np.unique(grid_target_int))
+        # Delete pipe
+        if (verbosity > 0):
+            sys.stdout = old_stdout
         # Calculate errors
         predict_train = model.predict(Xtrain)/100
         predict_dev = model.predict(Xdev)/100
         train_error = np.append(train_error, np.sum(np.absolute(Ytrain/100-predict_train)))
         dev_error = np.append(dev_error, 8*np.sum(np.absolute(Ydev/100-predict_dev)))# factor 8 because dev set is 8 times smaller than the train set
+        # Save verbosity output (training loss) in variable for further analysis 
+        if (verbosity > 0):
+            verbosity_output = mystdout.getvalue()
+            verbosity_output = np.array(verbosity_output.split(' '))
+            for i in range(4,len(verbosity_output),4):
+                if (isinstance(maybe_float(verbosity_output[i].split('\n')[0]), float) == True):
+                    loss = np.append(loss, float(verbosity_output[i].split('\n')[0]))
     print("")
-    # Delete pipe
-    if (verbosity > 0):
-        sys.stdout = old_stdout
-    # Save verbosity output (training loss) in variable
-    loss = np.array(0)
-    loss = np.delete(loss, 0)
-    if (verbosity > 0):
-        verbosity_output = mystdout.getvalue()
-        verbosity_output = np.array(verbosity_output.split(' '))
-        for i in range(4,len(verbosity_output),4):
-            if (verbosity_output[i].split('\n')[0] == 'improve'):
-                continue
-            else:
-                loss = np.append(loss, float(verbosity_output[i].split('\n')[0]))
     # Save score of training
     score = model.score(Xtrain,Ytrain)
     end = time.time()
