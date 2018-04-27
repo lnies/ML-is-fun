@@ -1,4 +1,5 @@
 MLforXES/__init__.py
+MLforXES/config.py
 MLforXES/main.py
 MLforXES.egg-info/PKG-INFO
 MLforXES.egg-info/SOURCES.txt
