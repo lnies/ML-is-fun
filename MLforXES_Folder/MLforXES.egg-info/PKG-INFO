@@ -1,4 +1,4 @@
-Metadata-Version: 1.0
+Metadata-Version: 1.1
 Name: MLforXES
 Version: 0.1
 Summary: UNKNOWN
@@ -9,3 +9,12 @@ License: UNKNOWN
 Description-Content-Type: UNKNOWN
 Description: UNKNOWN
 Platform: UNKNOWN
+Requires: astropy
+Requires: plotly
+Requires: sklearn
+Requires: tarfile
+Requires: dill
+Requires: msgpack
+Requires: h5py
+Requires: lmfit
+Requires: peakutils
