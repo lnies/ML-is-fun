@@ -276,7 +276,7 @@ def scale_input(X):
     #plotly_show()
     return X
 
-def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
+def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity, debugging = False):
     """
     Trains given model on data X and labels y. Returns trainings score and instance of trained model
     """
@@ -308,7 +308,10 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
             iteration_time = np.append(iteration_time, time.time()-inner_clock)
             mean_it_time = np.mean(iteration_time)
             remaining_time = (100-(int(i/model.max_iter * 100)))*(mean_it_time)
-            print("Training progress: %i%%; Time fraction: %3.2f s per %%; Estimated time left: %i s (%3.2f h)" % (int(i/model.max_iter * 100), (mean_it_time), int(remaining_time), (remaining_time/3600)), end='\r') 
+            remaining_time_hours = np.floor(remaining_time/3600)
+            remaining_time_minutes = np.floor((remaining_time/60) % 60)
+            remaining_time_seconds = np.ceil((((remaining_time/60) % 60) *60) % 60 )
+            print("Training progress: %i%%, Time per percent:  %3.2f s per %%, Estimated time left: %ih %imin %is" % (int(i/model.max_iter * 100), (mean_it_time),(remaining_time_hours), remaining_time_minutes, remaining_time_seconds), end='\r') 
             inner_clock = time.time()
         # Set out pipe to catch stdout for getting verbosity output of model.fit
         if (verbosity > 0):
@@ -335,14 +338,22 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
     # Save score of training
     score = model.score(Xtrain,Ytrain)
     end = time.time()
-    # Print training statistics depending onb verbosity level
+    # Print training statistics depending on verbosity level
     if (verbosity > 0):
+        # First, test 'loss' data on invalid values (some bug while training??)
+        clean_loss = np.array([])
+        for i in range(len(loss)):
+            if (loss[i] < 0.1):
+                print("Invalid loss value of %1.7f encountered in iteration step %i !" % (loss[i], i))
+            else:
+                clean_loss = np.append(clean_loss, loss[i])
+        print("")
         print("Training time: %3.2f " % (end - start))
         print("Training score: %3.2f " % (score))
         if (verbosity > 1):
             plt.figure()
             plt.title("Training loss per epoch")
-            plt.semilogy(loss, label="Loss")
+            plt.semilogy(clean_loss, label="Loss")
             plt.grid(True)
             plt.legend()
             plotly_show()       
@@ -353,12 +364,16 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity):
             plt.grid(True)
             plt.legend()
             plotly_show()       
-    return score
+    if (debugging == False):
+        return score
+    if (debugging == True):
+        return score, loss
 
-def test_envir(library, n, model, verbosity, scaling, pca, k):
+def train_envir(library, model, set_name, verbosity, pca, k, debugging = False):
     """
     Trains and tests a NN on a given label
     """
+    # Split sets
     Xtrain, Ytrain, Xdev, Ydev, Xtest, Ytest = split_library(library, "energy_label")
     Ytrain = Ytrain*100
     Ytrain_int = Ytrain.astype(int)
@@ -380,14 +395,11 @@ def test_envir(library, n, model, verbosity, scaling, pca, k):
         X_hat_test, X_rec_test = PCA(Xtest, k)
         Xtrain, Xdev, Xtest = gen_pol_feat(X_hat_train, X_hat_dev, X_hat_test)
     # Start testing
-    score = NN_train(Xtrain, Ytrain_int, Xdev, Ydev_int, model, verbosity)
+    score, loss = NN_train(Xtrain, Ytrain_int, Xdev, Ydev_int, model, verbosity, debugging)
     scores = np.append(scores, score)
-    
-    #Save model via
-    joblib.dump(model, './data/'+str(1)+'_neural_network.pkl')
-    #Load model via
-    model2 = joblib.load('./data/'+str(1)+'_neural_network.pkl')
-    
+    # Save model via
+    joblib.dump(model, './data/'+set_name+'_neural_network.pkl')
+    # Test training on dev set
     predict_train = model.predict(Xtrain)/100
     predict_proba_train = model.predict_proba(Xtrain)
     predict_dev = model.predict(Xdev)/100
@@ -406,7 +418,47 @@ def test_envir(library, n, model, verbosity, scaling, pca, k):
     plt.legend()
     plt.grid(True)
     plotly_show()
-    return predict_train, predict_dev, predict_proba_train, predict_proba_dev
+    # Return some results for evaluation 
+    if (debugging == False):
+        return predict_train, predict_dev, predict_proba_train, predict_proba_dev
+    if (debugging == True): 
+        return predict_train, predict_dev, predict_proba_train, predict_proba_dev, loss
+
+def test_envir(library, set_name, n_plots, verbosity):
+    """
+    Test trained model on dev set
+    """
+    # Load model 
+    model = joblib.load('./data/'+set_name+'_neural_network.pkl')
+    # Split sets and generate prediction
+    Xtrain, Ytrain, Xdev, Ydev, Xtest, Ytest = split_library(library, "energy_label")
+    Xtrain_en, Ytrain_en, Xdev_en, Ydev_en, Xtest_en, Ytest_en = split_library(library, "energies_binned")
+    predict_train = model.predict(Xtrain)/100
+    predict_proba_train = model.predict_proba(Xtrain)
+    predict_dev = model.predict(Xdev)/100
+    predict_proba_dev = model.predict_proba(Xdev)
+    # Plot some results 
+    bins = GRID_TARGET[0:len(GRID_TARGET)-1]
+    bins_int = bins*100
+    bins_int = bins_int.astype(int)
+    print("Probability distribution for detected energies")
+    for k in range(n_plots):
+        plt.xlim(2008,2018)
+        plt.plot(GRID_FEATURES, Xdev[k])
+        plt.plot(Ydev_en[k,0], 0.01, 'ro')
+        plt.plot(Ydev_en[k,1], 0.01, 'ro')
+        plt.plot(Ydev_en[k,2], 0.01, 'ro')
+        plt.bar(bins, predict_proba_dev[k][:])
+        #plt.bar(bins, predict_proba_dev[1][k][:])
+        plt.grid(True)
+        plotly_show()  
+    # Do some fitting
+    print("Fitting probability distribution")
+    fit = prob_stats(predict_proba_dev[0:n_plots])
+    for k in range(n_plots):
+        plt.plot(GRID_TARGET, fit[k][0].eval(x=GRID_TARGET), "r", lw=2)
+        plt.bar(GRID_TARGET[0:len(GRID_TARGET)-1], predict_proba_dev[k])
+        plotly_show()
 
 def split_library(library, key):
     """
