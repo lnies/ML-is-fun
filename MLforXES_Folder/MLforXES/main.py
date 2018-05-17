@@ -343,7 +343,7 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity, debugging = False):
         # First, test 'loss' data on invalid values (some bug while training??)
         clean_loss = np.array([])
         for i in range(len(loss)):
-            if (loss[i] < 0.1):
+            if (loss[i] < 0.001):
                 print("Invalid loss value of %1.7f encountered in iteration step %i !" % (loss[i], i))
             else:
                 clean_loss = np.append(clean_loss, loss[i])
