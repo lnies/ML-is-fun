@@ -109,6 +109,8 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
             k = n
         X["states"][i] = k
         for j in range(k):
+			#random number to scale each state by (from 0.1 to 0.9)
+			dA = np.random.choice(np.arange(0.1, 1, 0.01))
             # Generate random distribution (+- 1) around central value of energie E
             E_epsilon = (np.random.random_sample()-0.5)*2
             # Generate random distribution (+- 0.1) around central value of energie dE
@@ -125,7 +127,7 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
             v2 = Voigt1D(x_0=E, amplitude_L=l2, fwhm_L=2*GAMMA2, fwhm_G=2*SIGMA2*np.sqrt(2*np.log(2)))
             # Superpose the states
             feature_plot += v1(GRID_PLOT)+v2(GRID_PLOT)
-            feature_array += v1(GRID_FEATURES)+v2(GRID_FEATURES)
+            feature_array += (v1(GRID_FEATURES)+v2(GRID_FEATURES)) * dA
             # Calculate the ratio of the areas
             R = calc_area(GRID_FEATURES, v2(GRID_FEATURES))/calc_area(GRID_FEATURES,v1(GRID_FEATURES))
             ### Discretize Energies for classification option
