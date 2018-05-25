@@ -112,7 +112,7 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
             #random number to scale each state by (from 0.1 to 0.9)
             dA = np.random.choice(np.arange(0.1, 1, 0.01))
             # Generate random distribution (+- 1) around central value of energie E
-            E_epsilon = (np.random.random_sample()-0.5)*2
+            #E_epsilon = (np.random.random_sample()-0.5)*2
             # Generate random distribution (+- 0.1) around central value of energie dE
             dE_epsilon = (np.random.random_sample()-0.5)*(0.4)
             # Generate random distribution (+- 0.05) around central value of amplitude L1
@@ -121,7 +121,7 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
             dL2 = (np.random.random_sample()-0.5)/15
             l1 = L1 + dL1
             l2 = L2 + dL2
-            E = MEAN_ENERGY + E_epsilon
+            E = RANDOM_ENERGY #+ E_epsilon
             dE = MEAN_ENERGY_SHIFT + dE_epsilon
             v1 = Voigt1D(x_0=E-dE, amplitude_L=l1, fwhm_L=2*GAMMA1, fwhm_G=2*SIGMA1*np.sqrt(2*np.log(2)))
             v2 = Voigt1D(x_0=E, amplitude_L=l2, fwhm_L=2*GAMMA2, fwhm_G=2*SIGMA2*np.sqrt(2*np.log(2)))
