@@ -109,8 +109,8 @@ def gen_set(N, n, noise, random_states, Set, verbosity, poissoncnts = POISSONCNT
             k = n
         X["states"][i] = k
         for j in range(k):
-			#random number to scale each state by (from 0.1 to 0.9)
-			dA = np.random.choice(np.arange(0.1, 1, 0.01))
+            #random number to scale each state by (from 0.1 to 0.9)
+            dA = np.random.choice(np.arange(0.1, 1, 0.01))
             # Generate random distribution (+- 1) around central value of energie E
             E_epsilon = (np.random.random_sample()-0.5)*2
             # Generate random distribution (+- 0.1) around central value of energie dE
