@@ -284,8 +284,7 @@ def NN_train(Xtrain, Ytrain, Xdev, Ydev, model, verbosity, debugging = False):
     """
     start = time.time()
     # Create target classes (energies only expected between 2013eV and 2015eV)
-    grid_target_int = GRID_TARGET*100
-    grid_target_int = grid_target_int.astype(int)
+    grid_target_int = np.append((GRID_TARGET*100).astype(int),int(GRID_TARGET[-1]*100+1)) # some weird algebra due to the fact that int() kills the last array element (I don't know why)
     # Create error array to store mean squared error
     train_error = np.array([])
     dev_error = np.array([])
